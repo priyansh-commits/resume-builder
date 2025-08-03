@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { ResumeCanvas } from "@/components/resume-canvas"
 import { Sidebar } from "@/components/sidebar"
 import { Navbar } from "@/components/navbar"
@@ -10,9 +10,11 @@ import { AuthProvider, useAuth } from "@/components/auth/auth-provider"
 import { LoginForm } from "@/components/auth/login-form"
 import type { ResumeData, SectionType, ResumeTemplate } from "@/types/resume"
 import type { BackgroundTheme } from "@/components/background-color-selector"
+import html2pdf from "html2pdf.js"
 
 function ResumeEditor() {
   const { user, loading } = useAuth()
+  const resumeRef = useRef<HTMLDivElement>(null)
   const [resumeData, setResumeData] = useState<ResumeData & { backgroundTheme?: BackgroundTheme }>({
     personalInfo: {
       fullName: "",
@@ -42,7 +44,6 @@ function ResumeEditor() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [isJobMatchOpen, setIsJobMatchOpen] = useState(false)
 
-  // Auto-save functionality
   useEffect(() => {
     if (user) {
       const saved = localStorage.getItem(`resumeData_${user.id}`)
@@ -50,7 +51,6 @@ function ResumeEditor() {
         try {
           const parsedData = JSON.parse(saved)
           setResumeData(parsedData)
-          console.log("Resume data loaded from localStorage:", parsedData)
         } catch (error) {
           console.error("Failed to load saved data:", error)
         }
@@ -61,48 +61,49 @@ function ResumeEditor() {
   useEffect(() => {
     if (user) {
       localStorage.setItem(`resumeData_${user.id}`, JSON.stringify(resumeData))
-      console.log("Resume data saved to localStorage")
     }
   }, [resumeData, user])
 
   const updateResumeData = (newData: Partial<ResumeData & { backgroundTheme?: BackgroundTheme }>) => {
-    console.log("Updating resume data:", newData)
-    setResumeData((prev) => {
-      const updated = { ...prev, ...newData }
-      console.log("Updated resume data:", updated)
-      return updated
-    })
+    setResumeData((prev) => ({ ...prev, ...newData }))
   }
 
   const handleSectionChange = (section: SectionType) => {
-    console.log("Section changed to:", section)
     setActiveSection(section)
   }
 
   const handleTemplateChange = (template: ResumeTemplate) => {
-    console.log("Template changed to:", template)
     setSelectedTemplate(template)
   }
 
   const handleBackgroundThemeChange = (theme: BackgroundTheme) => {
-    console.log("Background theme changed to:", theme)
     updateResumeData({ backgroundTheme: theme })
+  }
+
+  const handleDownload = () => {
+    if (resumeRef.current) {
+      html2pdf().set({
+        margin: 0,
+        filename: "resume.pdf",
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+      }).from(resumeRef.current).save()
+    }
   }
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-900">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4 loading-spinner"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
           <p className="text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
       </div>
     )
   }
 
-  if (!user) {
-    return <LoginForm />
-  }
+  if (!user) return <LoginForm />
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-900 overflow-hidden">
@@ -113,10 +114,10 @@ function ResumeEditor() {
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         onToggleJobMatch={() => setIsJobMatchOpen(!isJobMatchOpen)}
+        onDownloadClick={handleDownload}
       />
 
       <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
-        {/* Sidebar with proper scrolling - DARK MODE ENABLED */}
         <div
           className={`transition-all duration-300 ${
             isSidebarOpen ? "w-80" : "w-0"
@@ -132,20 +133,18 @@ function ResumeEditor() {
           />
         </div>
 
-        {/* Main Canvas with proper scrolling - ALWAYS LIGHT MODE */}
         <div className={`flex-1 transition-all duration-300 overflow-hidden ${isJobMatchOpen ? "mr-96" : ""}`}>
-          {/* Force light mode for resume preview */}
           <div className="light-only h-full">
             <ResumeCanvas
               resumeData={resumeData}
               template={selectedTemplate}
               activeSection={activeSection}
               onSectionClick={handleSectionChange}
+              resumeRef={resumeRef} // passed to enable PDF
             />
           </div>
         </div>
 
-        {/* Job Match Panel with proper scrolling - DARK MODE ENABLED */}
         <div
           className={`transition-all duration-300 ${
             isJobMatchOpen ? "w-96" : "w-0"
