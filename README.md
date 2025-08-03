@@ -26,8 +26,9 @@ A modern, responsive resume builder built with **Next.js**, **Tailwind CSS v4**,
 - **GitHub** – Source Control
 
 ## 🔗 Live Project
-🌐 [https://resume-builder.vercel.app](https://resume-builder.vercel.app)  
+🌐 [https://resume-builder.vercel.app](https://resume-builder-sfpr.vercel.app/)  
 📂 [GitHub Repository](https://github.com/priyansh-commits/resume-builder)
+
 
 ---
 
