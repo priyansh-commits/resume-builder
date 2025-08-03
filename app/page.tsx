@@ -1,7 +1,5 @@
 "use client"
 
-export const dynamic = "force-dynamic" // prevent prerender crash at build time
-
 import { useState, useEffect, useRef } from "react"
 import { ResumeCanvas } from "@/components/resume-canvas"
 import { Sidebar } from "@/components/sidebar"
@@ -12,11 +10,11 @@ import { AuthProvider, useAuth } from "@/components/auth/auth-provider"
 import { LoginForm } from "@/components/auth/login-form"
 import type { ResumeData, SectionType, ResumeTemplate } from "@/types/resume"
 import type { BackgroundTheme } from "@/components/background-color-selector"
-import html2pdf from "html2pdf.js"
 
 function ResumeEditor() {
   const { user, loading } = useAuth()
   const resumeRef = useRef<HTMLDivElement>(null)
+
   const [resumeData, setResumeData] = useState<ResumeData & { backgroundTheme?: BackgroundTheme }>({
     personalInfo: {
       fullName: "",
@@ -82,8 +80,10 @@ function ResumeEditor() {
     updateResumeData({ backgroundTheme: theme })
   }
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (resumeRef.current) {
+      const html2pdf = (await import("html2pdf.js")).default
+
       html2pdf()
         .set({
           margin: 0,
