@@ -41,6 +41,7 @@ interface NavbarProps {
   isSidebarOpen: boolean
   onToggleSidebar: () => void
   onToggleJobMatch: () => void
+  onDownloadClick?: () => void // ✅ OPTIONAL
 }
 
 export function Navbar({
@@ -50,6 +51,7 @@ export function Navbar({
   isSidebarOpen,
   onToggleSidebar,
   onToggleJobMatch,
+  onDownloadClick,
 }: NavbarProps) {
   const { theme, setTheme } = useTheme()
   const { user, logout } = useAuth()
@@ -57,16 +59,13 @@ export function Navbar({
   const [showTemplateModal, setShowTemplateModal] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
-  const handleDownloadPDF = async () => {
-    // Simulate PDF generation
+  const handleDownloadPDF = () => {
     const button = document.querySelector("[data-download-pdf]") as HTMLButtonElement
     if (button) {
       const originalText = button.textContent
       button.textContent = "Generating..."
 
-      // Simulate download delay
       setTimeout(() => {
-        // Create a temporary link for download
         const link = document.createElement("a")
         link.href = "/placeholder.svg?height=800&width=600&text=Resume+PDF"
         link.download = `${resumeData.personalInfo.fullName || "resume"}.pdf`
@@ -75,14 +74,14 @@ export function Navbar({
         document.body.removeChild(link)
 
         button.textContent = originalText
-      }, 2000)
+      }, 1500)
     }
   }
 
   const handleExportResume = () => {
     const dataStr = JSON.stringify(resumeData, null, 2)
-    const dataBlob = new Blob([dataStr], { type: "application/json" })
-    const url = URL.createObjectURL(dataBlob)
+    const blob = new Blob([dataStr], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
     const link = document.createElement("a")
     link.href = url
     link.download = `resume-${selectedTemplate}-${Date.now()}.json`
@@ -92,8 +91,6 @@ export function Navbar({
 
   const handleSave = async () => {
     setIsSaving(true)
-
-    // Simulate save operation
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
     if (user) {
@@ -101,8 +98,6 @@ export function Navbar({
     }
 
     setIsSaving(false)
-
-    // Show success feedback
     const button = document.querySelector("[data-save-button]") as HTMLButtonElement
     if (button) {
       const originalText = button.textContent
@@ -117,14 +112,9 @@ export function Navbar({
     <>
       <nav className="fixed top-0 left-0 right-0 h-16 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-200/60 dark:border-gray-700/60 shadow-sm z-50">
         <div className="flex items-center justify-between h-full px-4 lg:px-6">
-          {/* Left Section */}
+          {/* Left */}
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onToggleSidebar}
-              className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all"
-            >
+            <Button variant="ghost" size="sm" onClick={onToggleSidebar}>
               {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
 
@@ -133,55 +123,39 @@ export function Navbar({
                 <FileText className="w-5 h-5 text-white" />
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-lg font-bold text-gray-900 dark:text-white font-sans">Resume Builder</h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-sans">Privacy-Preserving AI</p>
+                <h1 className="text-lg font-bold text-gray-900 dark:text-white">Resume Builder</h1>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Privacy-Preserving AI</p>
               </div>
             </div>
           </div>
 
-          {/* Center Section - Desktop Only */}
+          {/* Center (Desktop) */}
           <div className="hidden lg:flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowTemplateModal(true)}
-              className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg font-sans transition-all hover:shadow-md"
-            >
+            <Button variant="outline" size="sm" onClick={() => setShowTemplateModal(true)}>
               <Palette className="w-4 h-4 mr-2" />
               Choose Template
             </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowPreview(true)}
-              className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg font-sans transition-all hover:shadow-md"
-            >
+            <Button variant="outline" size="sm" onClick={() => setShowPreview(true)}>
               <Eye className="w-4 h-4 mr-2" />
               Preview
             </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onToggleJobMatch}
-              className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg font-sans transition-all hover:shadow-md"
-            >
+            <Button variant="outline" size="sm" onClick={onToggleJobMatch}>
               <Briefcase className="w-4 h-4 mr-2" />
               Job Match
             </Button>
           </div>
 
-          {/* Right Section */}
+          {/* Right */}
           <div className="flex items-center gap-2 lg:gap-3">
-            {/* Save Button */}
             <Button
               variant="outline"
               size="sm"
               onClick={handleSave}
               disabled={isSaving}
               data-save-button
-              className="hidden sm:flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg font-sans transition-all hover:shadow-md"
+              className="hidden sm:flex"
             >
               {isSaving ? (
                 <>
@@ -196,142 +170,71 @@ export function Navbar({
               )}
             </Button>
 
-            {/* Download Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg font-sans transition-all hover:shadow-md"
-                >
+                <Button variant="outline" size="sm">
                   <Download className="w-4 h-4 mr-2" />
                   <span className="hidden sm:inline">Export</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-48 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-xl shadow-lg"
-              >
+              <DropdownMenuContent align="end">
                 <DropdownMenuItem
-                  onClick={handleDownloadPDF}
+                  onClick={onDownloadClick ?? handleDownloadPDF} // ✅ fallback if prop not passed
                   data-download-pdf
-                  className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg font-sans"
                 >
                   <FileDown className="w-4 h-4 mr-2" />
                   Download PDF
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={handleExportResume}
-                  className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg font-sans"
-                >
+                <DropdownMenuItem onClick={handleExportResume}>
                   <Download className="w-4 h-4 mr-2" />
                   Export Data
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Theme Toggle */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all"
             >
               {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </Button>
 
-            {/* User Menu */}
+            {/* User dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all"
-                >
-                  {user?.profileImage ? (
-                    <img
-                      src={user.profileImage || "/placeholder.svg"}
-                      alt="Profile"
-                      className="w-6 h-6 rounded-full object-cover"
-                    />
+                <Button variant="ghost" size="sm">
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt="Profile" className="w-6 h-6 rounded-full object-cover" />
                   ) : (
                     <User className="w-5 h-5" />
                   )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-56 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-xl shadow-lg"
-              >
-                <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white break-words font-sans">
-                    {user?.name || "User"}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 break-all font-sans">
-                    {user?.email || "user@example.com"}
-                  </p>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-3 py-2 border-b">
+                  <p className="text-sm font-medium">{user?.name || "User"}</p>
+                  <p className="text-xs text-gray-500">{user?.email || "user@example.com"}</p>
                 </div>
-                <DropdownMenuItem className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg font-sans">
+                <DropdownMenuItem>
                   <Settings className="w-4 h-4 mr-2" />
                   Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg font-sans">
+                <DropdownMenuItem>
                   <Share2 className="w-4 h-4 mr-2" />
                   Share Resume
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-700" />
-                <DropdownMenuItem
-                  onClick={logout}
-                  className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-sans"
-                >
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout} className="text-red-600">
                   <LogOut className="w-4 h-4 mr-2" />
                   Sign Out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Template Badge - Desktop Only */}
-            <Badge
-              variant="secondary"
-              className="hidden xl:flex bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full font-sans"
-            >
-              {selectedTemplate.charAt(0).toUpperCase() + selectedTemplate.slice(1).replace("-", " ")}
+            <Badge variant="secondary" className="hidden xl:flex">
+              {selectedTemplate.charAt(0).toUpperCase() + selectedTemplate.slice(1)}
             </Badge>
-          </div>
-        </div>
-
-        {/* Mobile Menu - Show template and preview buttons on smaller screens */}
-        <div className="lg:hidden px-4 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-          <div className="flex items-center justify-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowTemplateModal(true)}
-              className="bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-lg font-sans text-xs"
-            >
-              <Palette className="w-3 h-3 mr-1" />
-              Template
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowPreview(true)}
-              className="bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-lg font-sans text-xs"
-            >
-              <Eye className="w-3 h-3 mr-1" />
-              Preview
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onToggleJobMatch}
-              className="bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-lg font-sans text-xs"
-            >
-              <Briefcase className="w-3 h-3 mr-1" />
-              Jobs
-            </Button>
           </div>
         </div>
       </nav>
