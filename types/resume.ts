@@ -76,4 +76,9 @@ export type SectionType =
   | "projects"
   | "certifications"
 
-export type ResumeTemplate = "classic" | "modern" | "creative" | "ats-optimized" | "business"
+export type ResumeTemplate =
+  | "classic"
+  | "modern"
+  | "creative"
+  | "ats-optimized"
+  | "business"
